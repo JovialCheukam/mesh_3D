@@ -47,7 +47,7 @@ class Rendering3D:
         faces = faces_x_y + faces_z_y
 
         # set the camera
-        self.camera = Camera(self, [0.5, 1, -8])
+        self.camera = Camera(self, [0.5, 1, -9])
         self.perspectivity = Perspectivity(self)
 
         # generate the mesh object
