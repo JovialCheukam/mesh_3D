@@ -4,7 +4,7 @@
 This software do a 3D mesh reconstruction from a cloud of points which are at the surface of a solid object.
 The reconstruction in 3D mesh is done by a basic algorithm which connect the points of the cloud having the maximum and 
 minimum X, Y, Z values of their space components that belong to the same plane. The algorithm browses through parallel planes
-of the space and connect with edges the points of the cloud belonging to those planes.
+of the space and connect with edges the extremal points of the cloud belonging to those planes.
 
 ### HOW TO INSTALL THE SOFTWARE IN ORDER TO GENERATE A 3D MESH FROM YOUR CLOUD OF POINTS
 
