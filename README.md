@@ -1,5 +1,5 @@
 
-## WELCOME TO THE 3D MESH FROM POINT CLOUD SOFTWARE !
+## WELCOME TO THE 3D MESH RECONSTRUCTION FROM POINT CLOUD SOFTWARE !
 
 This software do a 3D mesh reconstruction from a cloud of points which are at the surface of a solid object.
 The reconstruction in 3D mesh is done by a basic algorithm which connect the points of the cloud having the maximum and 
@@ -13,7 +13,7 @@ To install the software, it is simple. You just need to execute in order the fol
     1. you first make sure that `python3` and `pygame`  are installed in your your operating system
     2. clone the software from the git repository 
     3. open a terminal and with the `cd` command, go to the directory containing the cloned repository
-    4. tap in the terminal from the prevous directory the command ```python3 setup.py```
+    4. tap in the terminal from the prevous directory the command `python3 setup.py`
   
 ### HOW TO USE THE SOFTWARE TO GENERATE A 3D MESH FROM YOUR CLOUD OF POINTS
 
@@ -35,3 +35,9 @@ To use the software  to generate a 3D mesh from your cloud of points, do in orde
      4. Manipulate the rendering view of the 3D mesh by using the following keyboard of your computer: **D, Q, Z, S, W, X, LEFT, RIGHT, UP, DOWN**.
     
 ### EXAMPLES OF 3D MESH RECONSTRUCTION
+
+Down you have cloud of points:
+![Irregular cloud](irregular.gif)
+
+Now the following animation is a reconstruction of the solid version represented by the cloud.
+![Reconstruction from the cloud](irr_reconstructed.gif)

@@ -1,4 +1,5 @@
 import pygame as pg
+import imageio
 from linear_transforms import *
 
 
@@ -90,4 +91,30 @@ class Camera:
     def camera_matrix(self):
         return self.translate_matrix() @ self.rotate_matrix()
     
-    
+
+    # create animated gif:
+    def create_gif(self, screen, gif_name, FPS):
+        files = []
+        
+        done_capturing = False
+        file_num = 0
+        while not done_capturing:
+             file_num = file_num + 1
+             image = pg.display.get_surface()
+             screen.blit(image, (0,0))
+             pg.display.update()
+             
+             # Save every frame
+             filename = "reconstruction_exples/%04d.png" % file_num
+             pg.image.save(image, filename)
+
+             files.append(filename)
+             for event in pg.event.get():
+                if event.type == pg.QUIT:
+                  done_capturing = True
+
+        with imageio.get_writer(gif_name+'.gif', fps = FPS ) as writer:
+             for file in files:
+                 image = imageio.imread(file)
+                 writer.append_data(image)
+                 

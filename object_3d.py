@@ -7,13 +7,14 @@ class Object3D:
     def __init__(self, render, vertices, faces):
         self.render = render
         self.vertices = np.array(vertices)
-        correct_faces(faces)
+        #correct_faces(faces)
         self.faces = faces
         self.font = pg.font.SysFont('Arial', 30, bold = True)
         self.color_faces = [(pg.Color('orange'), face) for face in self.faces]
-        self.movement_flag, self.draw_vertices = True, True
+        self.movement_flag, self.draw_vertices = True, False
         self.label = ''
         self.is_axe = False
+        self.draw_edge = True
 
     def draw(self):
         self.screen_perspectivity()
@@ -41,15 +42,16 @@ class Object3D:
         vertices = vertices[:, :2]
         
         # draw faces of the 3d object
-        for index, color_face in enumerate(self.color_faces):
-            color, face = color_face
-            polygon = vertices[face]
-            if not np.any((polygon == self.render.H_WIDTH) | (polygon == self.render.H_HEIGHT)):
-                if self.is_axe or len(polygon) > 1:
-                    pg.draw.polygon(self.render.screen, color, polygon, 1)
-                if self.label:
-                    text = self.font.render(self.label[index], True, pg.Color('white'))
-                    self.render.screen.blit(text, polygon[-1])
+        if self.draw_edge:
+            for index, color_face in enumerate(self.color_faces):
+                color, face = color_face
+                polygon = vertices[face]
+                if not np.any((polygon == self.render.H_WIDTH) | (polygon == self.render.H_HEIGHT)):
+                    if self.is_axe or len(polygon) > 1:
+                        pg.draw.polygon(self.render.screen, color, polygon, 1)
+                    if self.label:
+                        text = self.font.render(self.label[index], True, pg.Color('white'))
+                        self.render.screen.blit(text, polygon[-1])
         
         # draw vertices forming faces of the 3d object
         if self.draw_vertices:
@@ -85,6 +87,7 @@ class Axes(Object3D):
         self.draw_vertices = False
         self.label = 'XYZ'
         self.is_axe = True
+        self.draw_edge = True
         
 
     

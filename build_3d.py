@@ -1,4 +1,5 @@
 import math
+from sklearn import linear_model
 from my_debug import *
 
 class Polyhedra3d:
@@ -12,62 +13,34 @@ class Polyhedra3d:
     def get_coord_x(self, vertex):
            return vertex[0]
     
-    def get_coord_z(self, vertex):
+    def get_coord_y(self, vertex):
            return vertex[1]
     
-    def get_coord_y(self, vertex):
+    def get_coord_z(self, vertex):
            return vertex[2]
         
-    # sort the values of vertices following one axe (horizontal axe) among x, y or z axes 
-    # of the space
-    def sort_for_h_axe(self, h_axe):
-         if h_axe == 'x':
-            self.vertices.sort(key = self.get_coord_x)
-         if h_axe == 'y':
-            self.vertices.sort(key = self.get_coord_y)
-         if h_axe == 'z':
-            self.vertices.sort(key = self.get_coord_z)
-         
-         return self.vertices
 
-    # compute the mean of values for v_axe 
-    def get_v_mean(self, v_axe, set_of_vertices):
-        if v_axe == 'x':
-            i = 0
-        if v_axe == 'y':
-            i = 1
-        if v_axe == 'z':
-            i = 2
-        mean = 0
-        for vertex in set_of_vertices:
-            mean = mean + vertex[i]
+    # compute a straight line regression model for the plane (h_axe,v_axe) to separate
+    # top points from bottom points 
+    def get_straight_line_separation(self, h_axe, v_axe, set_of_vertices):
+        h, v, z = self.get_plan_face(h_axe, v_axe)
+        length = len(set_of_vertices)
+        h_train = [0] * length
+        v_train = [0] * length
+
+        for j in range(length):
+            h_train[j] = [set_of_vertices[j][h]]
+            v_train[j] = [set_of_vertices[j][v]]
+
+        reg = linear_model.LinearRegression()
+        reg.fit(h_train,v_train)
+
+        # get coef a and b of the straight separate line v = a*h+b
+        #print_along('coef',reg.coef_)
         
-        return round((mean / len(set_of_vertices)), 2)
+        return reg
          
-    
 
-    # cluster the cloud of vertices where each cluster is a set of vertices which have 
-    # the same value following one fixed axe 
-    def get_vertices_per_value_of_h_axe(self, h_axe, sort_vertices_for_h_axe):
-        vertices_per_value_of_axe = {'0':[]}
-        if h_axe == 'x':
-            i = 0
-        if h_axe == 'y':
-            i = 1
-        if h_axe == 'z':
-            i = 2
-        rank_of_value_on_h_axe = 0
-        cur_value_on_h_axe = sort_vertices_for_h_axe[0][i]
-
-        for vertex in sort_vertices_for_h_axe:
-            if vertex[i] == cur_value_on_h_axe:
-                vertices_per_value_of_axe[str(rank_of_value_on_h_axe)].append(vertex)
-            else:
-                cur_value_on_h_axe = vertex[i]
-                rank_of_value_on_h_axe += 1
-                vertices_per_value_of_axe[str(rank_of_value_on_h_axe)] = [vertex]
-
-        return vertices_per_value_of_axe
     
     # given two axes (h_axe, v_axe) identify the plan given by the vertcal axe and the 
     # third axe
@@ -86,23 +59,6 @@ class Polyhedra3d:
             h, v, z = 1, 2, 0
         return h, v, z 
          
-    # get the vertex with the min or max value of the component on the v_axe (vertical axe)  
-    # which belong to the plan z = z0 + tan(theta)*x
-    def get_min_max_vertices_per_hvalue_of_h_axe(self, h_axe, v_axe, vertices_per_value_of_h_axe):
-
-        h, v, z = self.get_plan_face(h_axe, v_axe)
-        for key in vertices_per_value_of_h_axe.keys():
-            min_vertex_on_v_axe = vertices_per_value_of_h_axe[key][0]
-            max_vertex_on_v_axe = vertices_per_value_of_h_axe[key][0]
-
-            for vertex in vertices_per_value_of_h_axe[key]:
-                   if vertex[v] < min_vertex_on_v_axe[v]:
-                      min_vertex_on_v_axe = vertex
-                   if vertex[v] > max_vertex_on_v_axe[v]:
-                      max_vertex_on_v_axe = vertex
-            vertices_per_value_of_h_axe[key] = [min_vertex_on_v_axe, max_vertex_on_v_axe]
-        
-        return vertices_per_value_of_h_axe
             
     
     # separate index from their coresponding vertex components to get the face
@@ -116,50 +72,45 @@ class Polyhedra3d:
 
 
                 
-    # get all the vertices forming a face on the plan z = z0 + tan(theta)*x 
-    def get_orthogonal_face_for_zvalue(self, h_axe, v_axe, z0, theta):
-        sort_vertices_for_h_axe = self.sort_for_h_axe(h_axe)
-        #print_to_newline('sort_vertices_for_h_axe', sort_vertices_for_h_axe)
+    # get all the vertices forming a face on the plan z + z0 = 0  
+    def get_orthogonal_face_for_zvalue(self, h_axe, v_axe, z0):
+        
 
-        vertices_per_value_of_h_axe =  self.get_vertices_per_value_of_h_axe(h_axe, sort_vertices_for_h_axe)
-        #print_to_newline('vertices_per_value_of_h_axe', vertices_per_value_of_h_axe)
-
-        min_max_v_per_value_of_h_axe = self.get_min_max_vertices_per_hvalue_of_h_axe(h_axe, v_axe, vertices_per_value_of_h_axe)
-        #print_to_newline('min_max_v_per_value_of_h_axe', min_max_v_per_value_of_h_axe)
-
-        # get all the vertices belonging to the plan z = z0 + tan(theta)*x
+        # get all the vertices belonging to the plan z + z0 = 0
         face_vertices = []
-        j_max = len(min_max_v_per_value_of_h_axe)
         h, v, z = self.get_plan_face(h_axe, v_axe)
 
-        for j in range(j_max):
-
-            vertex_min = min_max_v_per_value_of_h_axe[str(j)][0]
+        for vertex in self.vertices:
 
             # Instead of using == we use <= to consider numeric instability
-            if abs(vertex_min[z] - round(z0 + math.tan(theta)*vertex_min[h], 2)) <= 0.25:
-               face_vertices.append(vertex_min)
-          
-            vertex_max = min_max_v_per_value_of_h_axe[str(j)][1]         
-            if vertex_max != vertex_min and abs(vertex_max[z] - round(z0 + math.tan(theta)*vertex_max[h], 2)) <= 0.25:
-                face_vertices.append(vertex_max)
+            if abs(vertex[z] + z0) <= 0.05:
+               face_vertices.append(vertex)
                 
-
-        # get min and max vertices forming a face on the plan z = z0 + tan(theta)*x
-
+        # get min and max vertices forming a face on the plan z + z0 = 0
+        
         if face_vertices == []:
             return face_vertices
-        v_mean = self.get_v_mean(v_axe, face_vertices)
+        
+        #print_to_newline('face_vertices',face_vertices)
+        
+        regression = self.get_straight_line_separation(h_axe, v_axe, face_vertices)
         face_vertices_min = []
         face_vertices_max = []
 
-        for vertex in face_vertices:
+        for vertex_ in face_vertices:
 
-            if vertex[v] < v_mean:
-                   face_vertices_min.append(vertex)
+            if vertex_[v] < regression.predict([[vertex_[h]]])[0]:
+                   face_vertices_min.append(vertex_)
             else:
-                   face_vertices_max.append(vertex)
+                   face_vertices_max.append(vertex_)
 
+
+        def get_h_value(vertice_):
+            return vertice_[h]
+        face_vertices_min.sort(key = get_h_value)
+        face_vertices_max.sort(key = get_h_value)
+
+        
         #print_to_newline('face_vertices_min',face_vertices_min)
 
         #print_to_newline('face_vertices_max',face_vertices_max)
@@ -167,8 +118,14 @@ class Polyhedra3d:
         n = len(face_vertices_max)
         face_vertices_max = [face_vertices_max[n - 1 - i] for i in range(n)]
 
+        
+
         face_vertices_with_indexes = self.avoid_intersection(h, v, face_vertices_min, face_vertices_max)
         #face_vertices_with_indexes = face_vertices_min + face_vertices_max
+
+        #print_to_newline('face_vertices_with_indexes', face_vertices_with_indexes)
+
+        
 
         # remove vertices of the identified face
         self.vertices = [vertex for vertex in self.vertices if vertex not in face_vertices_with_indexes] 
@@ -278,12 +235,13 @@ class Polyhedra3d:
 
     
     # generate a meshe version of the polyhedra from the cloud of vertices
-    def generate_meshe_for_theta_plan(self, h_axe, v_axe, list_of_z0s, theta):
+    def generate_meshe_for_theta_plan(self, h_axe, v_axe, list_of_z0s):
         list_of_faces = []
         for z0 in list_of_z0s:
             
               #print_along('---Process face', z0)
-              face =  self.get_orthogonal_face_for_zvalue(h_axe, v_axe, z0, theta)
+              face =  self.get_orthogonal_face_for_zvalue(h_axe, v_axe, z0)
+              #print_to_newline('face', face)
               list_of_faces.append(face)
               
         
@@ -291,4 +249,5 @@ class Polyhedra3d:
         #print_to_newline('list_of_vertices', list_of_vertices)
 
         #print_to_newline('list_of_faces', list_of_faces)
+        
         return list_of_vertices, list_of_faces

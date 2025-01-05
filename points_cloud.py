@@ -26,13 +26,12 @@ class CloudPoints:
             if point[i] > max_size:
                 max_size = point[i]
         return min_size, max_size
-    
 
     # get the cutting plans to which belong a face  
     def get_list_of_plans_for_faces(self, z0_min, z0_max, nb_plans):
         z_step = round(((z0_max - z0_min) / nb_plans), 2)
         
-        list_of_z0s = []
+        list_of_z0s = [z0_min]
         z0 = z0_min
 
         while z0 <= z0_max:
@@ -42,7 +41,7 @@ class CloudPoints:
         return list_of_z0s
     
     # gen vertices on the plans z = z0 + tan(theta)*x for z0 in z0_list
-    def gen_random_cloud(self, shape,  min_size, max_size, nb_points, z0_list, theta):
+    def gen_random_cloud(self, shape,  min_size, max_size, nb_points, z0_list):
         self.cloud = [0]*(len(z0_list)*nb_points)
         mu = (min_size + max_size) / 2
         sigma = (max_size - min_size) 
@@ -55,11 +54,12 @@ class CloudPoints:
                    radius = 2
 
                    while  abs(x) > radius:
-                      x = round(random.gauss(mu, sigma), 2)
+                      x = ((-1)**i)*round(random.gauss(mu, sigma), 2)
                    
                    
                    y = ((-1)**i)*round(math.sqrt(radius*radius - x*x), 2)
-                   z = round(z0 + math.tan(theta)*x, 2)
+                   z = round(z0, 2)
+                   
 
                 if shape == 'cylinder':
                     radius = 1.5
@@ -73,7 +73,7 @@ class CloudPoints:
                 if shape == 'random':
                    
                    y = round(random.gauss(mu, sigma), 2) 
-                   z = round(z0 + math.tan(theta)*x, 2)
+                   z = round(z0, 2)
                 
                 self.cloud[i + k*nb_points] = (x, y, z, i + k*nb_points)
                 
@@ -103,6 +103,28 @@ class CloudPoints:
         return points
     
    
+    def gen_unregular_surface(self, min_size, max_size, nb_points, z0_list):
+        self.cloud = [0]*(len(z0_list)*nb_points)
+        mu = (min_size + max_size) / 2
+        sigma = (max_size - min_size) 
+        k = 0
+        for _ in z0_list:
+            radius = random.randint(1,4)
+            for i in range(nb_points):
+                x = round(random.gauss(mu, sigma), 2)
+                y = round(x * x - math.sin(x), 2)
+                z = ((-1)**i)*round(math.sqrt(abs(radius*radius/4 - x*x)), 2)
+                while abs(x) > 2 or abs(y) > 2.3 or abs(z) > 2.5 :
+                    x = ((-1)**random.randint(1,4))*round(random.gauss(mu, sigma), 2)
+                    y = round(random.gauss(mu, sigma) - math.sin(radius), 2)
+                    z = ((-1)**i)*round(math.sqrt(abs(radius*radius/4 - x*x + y*y)), 2) + x*y
+                
+                self.cloud[i + k*nb_points] = (x, y, z, i + k*nb_points)
+                
+            k = k + 1
+
+        self.save_generated_cloud(self.cloud)
+        return self.cloud
 
     
     def gen_cloud_tube(self):
